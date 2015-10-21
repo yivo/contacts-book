@@ -11,11 +11,34 @@ require __DIR__ . '/../lib/PasswordFilter.php';
 require __DIR__ . '/../lib/Configuration.php';
 require __DIR__ . '/../lib/DatabaseConnection.php';
 
+
+//$a = [1,2,3];
+//
+//$b = array_map(function ($num) {
+//    return $num * 2;
+//}, $a);
+//
+//var_dump($a);
+//var_dump($b);
+//die;
+
+
+
+
+
 Configuration::set('db.engine',         'mysql');
 Configuration::set('db.user',           'root');
 Configuration::set('db.password',       'root');
 Configuration::set('db.host',           '127.0.0.1');
 Configuration::set('db.name',           'contacts-book');
+
+
+
+//var_dump(DatabaseConnection::getInstance()->fetchAll("SELECT * FROM users;"));
+//$array = DatabaseConnection::getInstance()->fetchAll("SELECT * FROM users;");
+//die;
+
+
 
 $uri    = $_SERVER['REQUEST_URI'];
 $method = $_SERVER['REQUEST_METHOD'];
@@ -29,23 +52,37 @@ if ($pos !== false) {
 $viewParams = [];
 global $viewParams;
 
-if ($uri === '/' || $uri === '/users') {
+if ($uri === '/' || $uri === '/users' || $uri === '/users/') {
     $viewParams['view'] = 'list';
     $viewParams['users'] = DatabaseConnection::getInstance()->fetchAll("SELECT * FROM users;");
-} else {
+    $viewParams['deletedUserID'] = isset($_GET['deletedUserID']) ? $_GET['deletedUserID'] : null;
+ } else {
     $params = [];
-    if (preg_match('/\/users\/(\d+)/', $uri, $params)) {
-        $id = $params[1];
-        $viewParams['user'] = DatabaseConnection::getInstance()->fetchOne("SELECT * FROM users WHERE id = $id;");
-        $viewParams['view'] = 'form';
+    if (preg_match('/\/users\/(\d+)\/(edit|delete)?/', $uri, $params)) {
+        $userID = $params[1];
+        $user = DatabaseConnection::getInstance()->fetchOne("SELECT * FROM users WHERE id = $userID;");
 
-        if ($viewParams['user'] === false) {
-            throw new Exception("User with id $id not found!");
+        if ($user === false) {
+            throw new Exception("User with id $userID not found!");
         }
 
+        $actionOnUser = (isset($params[2]) ? $params[2] : null) ?: 'show';
+        switch ($actionOnUser) {
+            case 'edit':
+                $viewParams['view'] = 'form';
+                $viewParams['user'] = $user;
+                break;
+            case 'delete':
+                DatabaseConnection::getInstance()->execute("DELETE FROM users WHERE id = $userID");
+                header('Location: /users?deletedUserID=' . $user->id);
+                break;
+            case 'show':
+                $viewParams['view'] = 'show';
+                $viewParams['user'] = $user;
+        }
     } else {
         http_response_code(404);
-        die('No found!');
+        die('Not found!');
     }
 }
 

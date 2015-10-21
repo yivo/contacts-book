@@ -25,7 +25,14 @@ class DatabaseConnection {
         $this->_pdo = new PDO($connectionString, $user, $password);
     }
 
+    /**
+     * @param $sql
+     * @return PDOStatement
+     */
     public function query($sql) {
+        /**
+         * @var PDOStatement $result
+         */
         $result = $this->_pdo->query($sql);
         if ($result === false) {
             var_dump($this->_pdo->errorInfo());
@@ -39,10 +46,15 @@ class DatabaseConnection {
         return array_map(function($array) {
             return (object)$array;
         }, $statement->fetchAll(PDO::FETCH_ASSOC));
+//        return $statement->fetchAll(PDO::FETCH_ASSOC);
     }
 
     public function fetchOne($sql) {
         $statement = $this->query($sql);
         return $statement->fetchObject();
+    }
+
+    public function execute($sql) {
+        return $this->query($sql)->execute();
     }
 }
