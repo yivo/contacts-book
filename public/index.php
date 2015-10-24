@@ -11,21 +11,6 @@ require __DIR__ . '/../lib/PasswordFilter.php';
 require __DIR__ . '/../lib/Configuration.php';
 require __DIR__ . '/../lib/DatabaseConnection.php';
 
-
-//$a = [1,2,3];
-//
-//$b = array_map(function ($num) {
-//    return $num * 2;
-//}, $a);
-//
-//var_dump($a);
-//var_dump($b);
-//die;
-
-
-
-
-
 Configuration::set('db.engine',         'mysql');
 Configuration::set('db.user',           'root');
 Configuration::set('db.password',       'root');
@@ -38,8 +23,6 @@ Configuration::set('db.name',           'contacts-book');
 //$array = DatabaseConnection::getInstance()->fetchAll("SELECT * FROM users;");
 //die;
 
-
-
 $uri    = $_SERVER['REQUEST_URI'];
 $method = $_SERVER['REQUEST_METHOD'];
 
@@ -51,26 +34,50 @@ if ($pos !== false) {
 
 $viewParams = [];
 global $viewParams;
+$name = isset($_POST['Name']) ? $_POST['Name'] : null;
+$email = isset($_POST['Email']) ? $_POST['Email'] : null;
+$password = isset($_POST['Password']) ? $_POST['Password'] : null;
 
-if ($uri === '/' || $uri === '/users' || $uri === '/users/') {
-    $viewParams['view'] = 'list';
-    $viewParams['users'] = DatabaseConnection::getInstance()->fetchAll("SELECT * FROM users;");
-    $viewParams['deletedUserID'] = isset($_GET['deletedUserID']) ? $_GET['deletedUserID'] : null;
- } else {
-    $params = [];
-    if (preg_match('/\/users\/(\d+)\/(edit|delete)?/', $uri, $params)) {
+switch ($uri) {
+
+    case (bool)preg_match('/^(\/)$|(users\/?)$/', $uri):
+        $viewParams['view'] = 'list';
+        $viewParams['users'] = DatabaseConnection::getInstance()->fetchAll("SELECT * FROM users;");
+        $viewParams['deletedUserID'] = isset($_GET['deletedUserID']) ? $_GET['deletedUserID'] : null;
+        $viewParams['editedUserID'] = isset($_GET['editedUserID']) ? $_GET['editedUserID'] : null;
+        $viewParams['addedUserID'] = isset($_GET['addedUserID']) ? $_GET['addedUserID'] : null;
+        break;
+
+    case (bool)preg_match('/\/users\/add$\/?/', $uri):
+        $viewParams['view'] = 'form';
+        break;
+
+    case (bool)preg_match('/\/users\/added/', $uri):
+        DatabaseConnection::getInstance()->query("INSERT INTO users (name, email, password) VALUES
+        ('$name', '$email', '$password');");
+        $user = DatabaseConnection::getInstance()->fetchOne("SELECT id FROM users ORDER BY id DESC LIMIT 1;");
+        header('Location: /users?addedUserID=' . $user->id);
+        break;
+
+    case (bool)preg_match('/\/users\/(\d+)\/(edit|delete|edited)?$/', $uri, $params):
         $userID = $params[1];
         $user = DatabaseConnection::getInstance()->fetchOne("SELECT * FROM users WHERE id = $userID;");
 
         if ($user === false) {
             throw new Exception("User with id $userID not found!");
         }
-
         $actionOnUser = (isset($params[2]) ? $params[2] : null) ?: 'show';
+
         switch ($actionOnUser) {
             case 'edit':
                 $viewParams['view'] = 'form';
                 $viewParams['user'] = $user;
+                break;
+            case 'edited':
+
+                DatabaseConnection::getInstance()->execute("UPDATE users
+   SET name = '$name', email = '$email', password = '$password' WHERE id = $userID");
+                header('Location: /users?editedUserID=' . $user->id);
                 break;
             case 'delete':
                 DatabaseConnection::getInstance()->execute("DELETE FROM users WHERE id = $userID");
@@ -80,10 +87,10 @@ if ($uri === '/' || $uri === '/users' || $uri === '/users/') {
                 $viewParams['view'] = 'show';
                 $viewParams['user'] = $user;
         }
-    } else {
+        break;
+    default:
         http_response_code(404);
         die('Not found!');
-    }
 }
 
 include __DIR__ . '/../views/layout.phtml';
