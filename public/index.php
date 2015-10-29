@@ -10,9 +10,24 @@ Config::set('db.password',       'root');
 Config::set('db.host',           '127.0.0.1');
 Config::set('db.name',           'contacts-book');
 
-//var_dump(DatabaseConnection::getInstance()->fetchAll("SELECT * FROM users;"));
-//$array = DatabaseConnection::getInstance()->fetchAll("SELECT * FROM users;");
-//die;
+$request = new Plus33FPS\Request($_SERVER, $_GET, $_POST);
+
+$router = new Plus33FPS\Routing\Router($request);
+
+$routeStore = new Plus33FPS\Routing\RouteStore();
+$routeStore->add(new Plus33FPS\Routing\Route([
+    'name' => 'index', 'pattern' => '/^\/$/'
+]));
+
+$route = $router->route($request, $routeStore->getAll());
+
+
+var_dump($route);
+die();
+
+//$response
+
+//new Request($_SERVER, $_GET, $_POST);
 
 $uri    = $_SERVER['REQUEST_URI'];
 $method = $_SERVER['REQUEST_METHOD'];
