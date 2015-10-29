@@ -1,4 +1,6 @@
 <?php
+namespace Library;
+
 class Configuration {
     private static $_data = [];
 

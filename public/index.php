@@ -1,23 +1,14 @@
 <?php
 
-require __DIR__ . '/../lib/EmailValidator.php';
-require __DIR__ . '/../lib/User.php';
-require __DIR__ . '/../lib/UserCLI.php';
-require __DIR__ . '/../lib/UserView.php';
-require __DIR__ . '/../lib/NullFilter.php';
-require __DIR__ . '/../lib/NameFilter.php';
-require __DIR__ . '/../lib/EmailFilter.php';
-require __DIR__ . '/../lib/PasswordFilter.php';
-require __DIR__ . '/../lib/Configuration.php';
-require __DIR__ . '/../lib/DatabaseConnection.php';
+require __DIR__ . '/../autoload.php';
 
-Configuration::set('db.engine',         'mysql');
-Configuration::set('db.user',           'root');
-Configuration::set('db.password',       'root');
-Configuration::set('db.host',           '127.0.0.1');
-Configuration::set('db.name',           'contacts-book');
+use Library\Configuration as Config;
 
-
+Config::set('db.engine',         'mysql');
+Config::set('db.user',           'root');
+Config::set('db.password',       'root');
+Config::set('db.host',           '127.0.0.1');
+Config::set('db.name',           'contacts-book');
 
 //var_dump(DatabaseConnection::getInstance()->fetchAll("SELECT * FROM users;"));
 //$array = DatabaseConnection::getInstance()->fetchAll("SELECT * FROM users;");
@@ -51,7 +42,7 @@ switch ($uri) {
 
     case (bool)preg_match('/^\/(users)?$/', $uri):
         $viewParams['view'] = 'list';
-        $viewParams['users'] = DatabaseConnection::getInstance()->fetchAll("SELECT * FROM users;");
+        $viewParams['users'] = Library\DatabaseConnection::getInstance()->fetchAll("SELECT * FROM users;");
         $viewParams['deletedUserID'] = isset($_GET['deletedUserID']) ? $_GET['deletedUserID'] : null;
         $viewParams['editedUserID'] = isset($_GET['editedUserID']) ? $_GET['editedUserID'] : null;
         $viewParams['addedUserID'] = isset($_GET['addedUserID']) ? $_GET['addedUserID'] : null;
@@ -59,9 +50,9 @@ switch ($uri) {
 
     case (bool)preg_match('/^\/users\/add$/', $uri):
         if ($isPOSTMethod) {
-            DatabaseConnection::getInstance()->query("INSERT INTO users (name, email, password) VALUES
+            Library\DatabaseConnection::getInstance()->query("INSERT INTO users (name, email, password) VALUES
         ('$name', '$email', '$password');");
-            $user = DatabaseConnection::getInstance()->fetchOne("SELECT id FROM users ORDER BY id DESC LIMIT 1;");
+            $user = Library\DatabaseConnection::getInstance()->fetchOne("SELECT id FROM users ORDER BY id DESC LIMIT 1;");
             header('Location: /users?addedUserID=' . $user->id);
         } else {
             $viewParams['view'] = 'form';
@@ -70,7 +61,7 @@ switch ($uri) {
 
     case (bool)preg_match('/\/users\/(\d+)\/(edit|delete)?$/', $uri, $params):
         $userID = $params[1];
-        $user = DatabaseConnection::getInstance()->fetchOne("SELECT * FROM users WHERE id = $userID;");
+        $user = Library\DatabaseConnection::getInstance()->fetchOne("SELECT * FROM users WHERE id = $userID;");
 
         if ($user === false) {
             throw new Exception("User with id $userID not found!");
@@ -83,7 +74,7 @@ switch ($uri) {
         switch ($actionOnUser) {
             case 'edit':
                 if ($isPOSTMethod) {
-                    DatabaseConnection::getInstance()->execute("UPDATE users
+                    Library\DatabaseConnection::getInstance()->execute("UPDATE users
    SET name = '$name', email = '$email', password = '$password' WHERE id = $userID");
                     header('Location: /users?editedUserID=' . $user->id);
                 } else {
@@ -92,7 +83,7 @@ switch ($uri) {
                 }
                 break;
             case 'delete':
-                DatabaseConnection::getInstance()->execute("DELETE FROM users WHERE id = $userID");
+                Library\DatabaseConnection::getInstance()->execute("DELETE FROM users WHERE id = $userID");
                 header('Location: /users?deletedUserID=' . $user->id);
                 break;
             case 'show':
