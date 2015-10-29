@@ -1,4 +1,5 @@
 <?php
+namespace Library;
 
 class PasswordFilter extends NullFilter {
     public function filter($password) {

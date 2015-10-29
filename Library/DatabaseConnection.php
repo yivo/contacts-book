@@ -1,4 +1,6 @@
 <?php
+namespace Library;
+
 class DatabaseConnection {
 
     private static $_instance;
@@ -22,16 +24,16 @@ class DatabaseConnection {
         $password   = Configuration::get('db.password');
         $database   = Configuration::get('db.name');
         $connectionString = "$engine:host=$host;dbname=$database";
-        $this->_pdo = new PDO($connectionString, $user, $password);
+        $this->_pdo = new \PDO($connectionString, $user, $password);
     }
 
     /**
      * @param $sql
-     * @return PDOStatement
+     * @return \PDOStatement
      */
     public function query($sql) {
         /**
-         * @var PDOStatement $result
+         * @var \PDOStatement $result
          */
         $result = $this->_pdo->query($sql);
         if ($result === false) {
@@ -45,7 +47,7 @@ class DatabaseConnection {
         $statement = $this->query($sql);
         return array_map(function($array) {
             return (object)$array;
-        }, $statement->fetchAll(PDO::FETCH_ASSOC));
+        }, $statement->fetchAll(\PDO::FETCH_ASSOC));
 //        return $statement->fetchAll(PDO::FETCH_ASSOC);
     }
 

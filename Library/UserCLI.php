@@ -1,4 +1,5 @@
 <?php
+namespace Library;
 
 class UserCLI {
     private $user;

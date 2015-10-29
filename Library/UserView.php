@@ -1,4 +1,5 @@
 <?php
+namespace Library;
 
 class UserView {
     public function present(User $user) {
