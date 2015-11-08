@@ -1,6 +1,6 @@
 <?php
 
-namespace Plus33FPS;
+namespace Plus33FPS\HTTP;
 
 class Request {
 

@@ -51,3 +51,37 @@
 # !!'' => false
 
 //var_dump($user);
+
+//$response
+
+//new Request($_SERVER, $_GET, $_POST);
+
+$uri = $_SERVER['REQUEST_URI'];
+$method = $_SERVER['REQUEST_METHOD'];
+
+$isGETMethod = $method === 'GET';
+$isPOSTMethod = $method === 'POST';
+
+$pos = strrpos($uri, '?');
+
+if ($pos !== false) {
+    $uri = substr($uri, 0, $pos);
+}
+
+# TODO Trim trailing slash from URI
+
+$viewParams = [
+    'isPOSTMethod' => $isPOSTMethod,
+    'isGETMethod' => $isGETMethod
+];
+global $viewParams;
+
+$name = isset($_POST['Name']) ? $_POST['Name'] : null;
+$email = isset($_POST['Email']) ? $_POST['Email'] : null;
+$password = isset($_POST['Password']) ? $_POST['Password'] : null;
+
+switch ($uri) {
+    default:
+        http_response_code(404);
+        die('Not found!');
+}
